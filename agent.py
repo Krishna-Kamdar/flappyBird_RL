@@ -42,7 +42,7 @@ class Agent:
         self.reward_threshold = params["reward_threshold"]
         self.network_sync_rate = params["network_sync_rate"]
 
-        self.loss_fn = nn.MSELoss()
+        self.loss_fn = nn.SmoothL1Loss()
         self.optimizer = None
 
         self.LOG_FILE = os.path.join(RUNS_DIR, f"{self.param_set}.log")
@@ -90,10 +90,10 @@ class Agent:
                         action = policy_dqn(state.unsqueeze(dim=0)).squeeze(dim=1).argmax() # exploit
 
                 next_state, reward, terminated, truncated, _ = env.step(action.item())
-                
+
                 # Combine them!
                 done = terminated or truncated
-                
+
                 episode_reward += reward
 
                 # create tensors
@@ -105,8 +105,7 @@ class Agent:
                     steps += 1
                     
                     # ⚠️ OPTIMIZATION BLOCK IS NOW SAFELY INSIDE THE WHILE LOOP
-                    if len(memory) > self.mini_batch_size:
-                        # get sample
+                    if len(memory) > 5000:
                         mini_batch = memory.sample(self.mini_batch_size)
                         self.optimize(mini_batch, policy_dqn, target_dqn)
 
